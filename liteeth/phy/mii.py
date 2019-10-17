@@ -60,6 +60,7 @@ class LiteEthPHYMIIRX(Module):
             converter.source.connect(source)
         ]
 
+_unique = 0
 
 class LiteEthPHYMIICRG(Module, AutoCSR):
     def __init__(self, clock_pads, pads, with_hw_init_reset):
@@ -70,8 +71,11 @@ class LiteEthPHYMIICRG(Module, AutoCSR):
         if hasattr(clock_pads, "phy"):
             self.sync.base50 += clock_pads.phy.eq(~clock_pads.phy)
 
-        self.clock_domains.cd_eth_rx = ClockDomain()
-        self.clock_domains.cd_eth_tx = ClockDomain()
+        global _unique
+        _unique += 1
+
+        self.clock_domains.cd_eth_rx = ClockDomain("phymii_eth_rx" + str(_unique))
+        self.clock_domains.cd_eth_tx = ClockDomain("phymii_eth_tx" + str(_unique))
         self.comb += self.cd_eth_rx.clk.eq(clock_pads.rx)
         self.comb += self.cd_eth_tx.clk.eq(clock_pads.tx)
 
@@ -93,8 +97,8 @@ class LiteEthPHYMII(Module, AutoCSR):
     def __init__(self, clock_pads, pads, with_hw_init_reset=True):
         self.dw = 8
         self.submodules.crg = LiteEthPHYMIICRG(clock_pads, pads, with_hw_init_reset)
-        self.submodules.tx =  ClockDomainsRenamer("eth_tx")(LiteEthPHYMIITX(pads))
-        self.submodules.rx = ClockDomainsRenamer("eth_rx")(LiteEthPHYMIIRX(pads))
+        self.submodules.tx = ClockDomainsRenamer(self.crg.cd_eth_tx.name)(LiteEthPHYMIITX(pads))
+        self.submodules.rx = ClockDomainsRenamer(self.crg.cd_eth_rx.name)(LiteEthPHYMIIRX(pads))
         self.sink, self.source = self.tx.sink, self.rx.source
 
         if hasattr(pads, "mdc"):
