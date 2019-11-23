@@ -5,13 +5,13 @@ from collections import OrderedDict
 
 from liteeth.common import *
 
-from litex.soc.interconnect.stream_packet import Arbiter, Dispatcher
+from litex.soc.interconnect.packet import Arbiter, Dispatcher
 
 
 class LiteEthCrossbar(Module):
-    def __init__(self, master_port, dispatch_param):
+    def __init__(self, master_port, dispatch_param, dw=8):
         self.users = OrderedDict()
-        self.master = master_port(8)
+        self.master = master_port(dw)
         self.dispatch_param = dispatch_param
 
     # overload this in derived classes
