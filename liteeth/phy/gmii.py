@@ -1,11 +1,11 @@
 # This file is Copyright (c) 2015-2018 Florent Kermarrec <florent@enjoy-digital.fr>
 # License: BSD
 
-from liteeth.common import *
-
+from migen import *
 from migen.genlib.io import DDROutput
 from migen.genlib.resetsync import AsyncResetSynchronizer
 
+from liteeth.common import *
 from liteeth.phy.common import *
 
 
@@ -62,10 +62,11 @@ class LiteEthPHYGMIICRG(Module, AutoCSR):
         else:
             # XXX Xilinx specific, replace BUFGMUX with a generic clock buffer?
             self.specials += Instance("BUFGMUX",
-                                      i_I0=self.cd_eth_rx.clk,
-                                      i_I1=clock_pads.tx,
-                                      i_S=mii_mode,
-                                      o_O=self.cd_eth_tx.clk)
+                i_I0 = self.cd_eth_rx.clk,
+                i_I1 = clock_pads.tx,
+                i_S  = mii_mode,
+                o_O  = self.cd_eth_tx.clk,
+            )
 
         reset = Signal()
         if with_hw_init_reset:
@@ -82,8 +83,8 @@ class LiteEthPHYGMIICRG(Module, AutoCSR):
 
 
 class LiteEthPHYGMII(Module, AutoCSR):
+    dw = 8
     def __init__(self, clock_pads, pads, with_hw_init_reset=True):
-        self.dw = 8
         self.submodules.crg = LiteEthPHYGMIICRG(clock_pads, pads, with_hw_init_reset)
         self.submodules.tx = ClockDomainsRenamer("eth_tx")(LiteEthPHYGMIITX(pads))
         self.submodules.rx = ClockDomainsRenamer("eth_rx")(LiteEthPHYGMIIRX(pads))
